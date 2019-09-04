@@ -7,82 +7,65 @@ package gt.edu.academik.fileservlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 
 /**
  *
  * @author diego
  */
 @WebServlet(name = "FileLoadServlet", urlPatterns = {"/archivo-carga"})
+@MultipartConfig (location="/tmp")
 public class FileLoadServlet extends HttpServlet {
-
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet FileLoadServlet</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet FileLoadServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+  
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        
+        try {
+            String pattern = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            
+            for ( Part part: request.getParts()) {
+                String nameFile = pattern + "-" + part.getSubmittedFileName();
+                part.write(nameFile);
+            }
+            
+            this.writeResponse(response, "Cargando satisfactoriamente.");
+            
+        } catch (IOException | ServletException ex) {
+            this.writeResponse(response, "Error al subir el archivo:" + ex.getMessage());
+        }
+       
     }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+    
+    private void writeResponse (HttpServletResponse response, String result)throws IOException {
+        StringBuilder responseHtml = new StringBuilder();
+        
+        responseHtml.append("<!DOCTYPE html>");
+        responseHtml.append("<html>");
+        responseHtml.append("<head>");
+        responseHtml.append("<title>Carga de Archivo</title>");
+        responseHtml.append("</head>");
+        responseHtml.append("<body>");
+        responseHtml.append("<h1>Resultado de Carga</h1>");
+        responseHtml.append("<strong>").append (result).append("</strong>");
+        responseHtml.append("</body>");
+        responseHtml.append("</html>");
+        
+        response.setContentType("text/html;charset=UTF-8");
+        
+        try (PrintWriter out = response.getWriter()) {
+            out.println(responseHtml.toString());
+        }
+    }
+    
 
 }
