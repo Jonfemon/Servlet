@@ -32,9 +32,15 @@ public class FileLoadServlet extends HttpServlet {
         
         try {
             String pattern = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-            
+            String nombre = request.getParameter ("nombre");
             for ( Part part: request.getParts()) {
-                String nameFile = pattern + "-" + part.getSubmittedFileName();
+                String nameFile= null;
+                if (nombre==null||nombre.isEmpty()){
+                    nameFile = pattern + "-" + part.getSubmittedFileName();
+                }
+                else {
+                    nameFile=nombre;
+                }
                 part.write(nameFile);
             }
             
